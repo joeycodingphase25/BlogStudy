@@ -1,3 +1,4 @@
+from ensurepip import bootstrap
 import logging
 import os
 from logging.handlers import RotatingFileHandler, SMTPHandler
@@ -6,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_bootstrap import Bootstrap
 from config import Config
 
 app = Flask(__name__)
@@ -15,7 +17,7 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = "login"
 mail = Mail(app)
-
+bootstrap = Bootstrap(app)
 
 # if in debug mode, do not send error emails
 if not app.debug:
