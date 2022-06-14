@@ -3,7 +3,7 @@ from flask import flash, redirect, render_template, url_for, request
 from flask_login import login_required, login_user, logout_user, current_user
 from werkzeug.urls import url_parse
 from app import app, db
-from app.forms import EditProfileForm, LoginForm, RegistrationForm
+from app.forms import EditProfileForm, LoginForm, PostForm, RegistrationForm
 from app.models import User, Post
 
 @app.before_request
@@ -13,22 +13,26 @@ def before_request():
         db.session.commit()
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=["GET", "POST"])
+@app.route('/index', methods=["GET", "POST"])
 @login_required
 def index():
-    title = 'Home'
-    posts = [
-        {
-            'author': {'username':'John'},
-            'body': 'Beautiful day in Paradise'
-        },
-        {
-            'author': {'username':'Suze'},
-            'body': 'I am a blogger for real'
-        }
-    ]
-    return render_template('index.html', title=title, posts=posts)
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+        # avoid duplicate by redirect
+        return redirect(url_for('index'))
+    posts = current_user.followed_posts()
+    return render_template('index.html', title="Home", form=form, posts=posts)
+
+@app.route('/explore')
+@login_required
+def explore():
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('index.html', title='Explore', posts=posts)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
